@@ -1,6 +1,8 @@
 jupyterlab
 langchain
 langchain-community
+langchain_postgres
+psycopg[binary]
 pandas
 openai
 python-dotenv

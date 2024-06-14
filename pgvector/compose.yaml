@@ -1,0 +1,38 @@
+services:
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
+    restart: always
+    ports:
+      - 8888:8888
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: pgvector
+    user: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 5
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    environment:
+      OLLAMA_DEBUG: 1
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - 11454:11434
+volumes:
+  ollama:
