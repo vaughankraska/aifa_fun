@@ -1,0 +1,6 @@
+jupyterlab
+langchain
+langchain-community
+pandas
+openai
+python-dotenv
