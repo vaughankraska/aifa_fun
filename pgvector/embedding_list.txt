@@ -1,0 +1,12 @@
+NAME                       	ID          	SIZE  	MODIFIED       
+flan-t5-xl:latest          	714f07b76235	2.3 GB	45 minutes ago	
+gte-base:latest            	554bf7cdde0c	117 MB	47 minutes ago	
+command-r:v0.1             	b8cdfff0263c	20 GB 	5 hours ago   	
+qwen2:0.5b                 	6f48b936a09f	352 MB	5 hours ago   	
+phi3:mini-128k             	22d3344c3227	2.2 GB	5 hours ago   	
+mxbai-embed-large:latest   	468836162de7	669 MB	5 hours ago   	
+all-minilm:latest          	1b226e2802db	45 MB 	5 hours ago   	
+nomic-embed-text:latest    	0a109f422b47	274 MB	5 hours ago   	
+gemma:2b-instruct-v1.1-q2_K	8be00e58cf4f	1.2 GB	5 hours ago   	
+tinyllama:latest           	2644915ede35	637 MB	5 hours ago   	
+llama3:latest              	365c0bd3c000	4.7 GB	6 days ago    	

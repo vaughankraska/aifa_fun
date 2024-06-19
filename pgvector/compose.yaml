@@ -18,6 +18,8 @@ services:
     restart: always
     environment:
       POSTGRES_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/postgresql/data
     ports:
       - 5432:5432
     healthcheck:
@@ -38,3 +40,4 @@ services:
       - 31415:11434
 volumes:
   ollama:
+  db-data:
