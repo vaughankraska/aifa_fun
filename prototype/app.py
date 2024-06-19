@@ -62,8 +62,6 @@ def handle_userinput(user_question):
     else:
         st.write("Please process the PDFs first to initialize the conversation.")
 
-
-
 def main():
     load_dotenv() #gives access to langchain access to api-keys in .env
 
@@ -86,9 +84,8 @@ def main():
         pdf_docs = st.file_uploader("Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
         if st.button("Process"):
             if pdf_docs:
-                with st.spinner("Processing"):
+                with st.spinner("Processing... Refresh page to stop"):
                     try:
-                        # Process PDF (replace with actual functions)
                         raw_text = get_pdf_text(pdf_docs)
                         text_chunks = get_text_chunks(raw_text)
                         vectorstore = get_vectorstore(text_chunks)
@@ -101,6 +98,7 @@ def main():
             else:
                 st.warning("Please upload at least one PDF.")
     #st.session_state.conversation #makes the conversation available outside the scope, and also to not re
+
 
 if __name__ == '__main__':
     main()
