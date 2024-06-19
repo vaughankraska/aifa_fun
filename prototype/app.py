@@ -80,10 +80,10 @@ def handle_userinput(user_question):
         our_response = st.session_state.conversation({'question': user_question})
         st.session_state.chat_history = our_response['chat_history']
 
-        st.write(st.session_state.chat_history)
+        #st.write(st.session_state.chat_history)
 
         for i, message in enumerate(st.session_state.chat_history):
-            st.write(message)
+            #st.write(message)
             if i % 2 == 0:
                 st.write(user_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
             else:
