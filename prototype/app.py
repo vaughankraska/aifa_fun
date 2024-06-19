@@ -1,5 +1,4 @@
-#pip install 
-#pip install InstructorEmbedding sentence-transformers
+#pip install -r requirements.txt
 
 import streamlit as st
 from dotenv import load_dotenv
