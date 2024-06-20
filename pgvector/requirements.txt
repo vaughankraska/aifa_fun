@@ -4,5 +4,5 @@ langchain-community
 langchain_postgres
 psycopg[binary]
 pandas
-openai
+pymupdf
 python-dotenv
