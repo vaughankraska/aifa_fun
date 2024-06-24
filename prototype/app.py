@@ -1,5 +1,8 @@
 #pip install -r requirements.txt
 
+#python --version
+#Python 3.8.18
+
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
