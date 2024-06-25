@@ -10,11 +10,11 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_postgres import PGVector
 from langchain_postgres.vectorstores import PGVector
-from langchain.llms import HuggingFaceHub
+from langchain.llms.ollama import Ollama
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
-import time 
+import time
 
 # re-make this to store as array of dicts,
 # to know sources where the text was from
@@ -29,10 +29,13 @@ import time
 #     ('phi3:mini-128k', '2.2 GB', 'phimini'),
 #     ('llama3:latest', '4.7 GB', 'llama'),
 # ]
+
+load_dotenv() # gives access to langchain access to api-keys in .env
 DB_NAME = 'minilm'
 EMBEDDING_MODEL_NAME = 'all-minilm:latest'
 CONNECTION = f"postgresql+psycopg://postgres:password@localhost:5432/{DB_NAME}"
-
+# LLM = HuggingFaceHub(repo_id="google/flan-t5-small", model_kwargs={"temperature": 0.5, "max_length": 512})
+LLM = Ollama(model='llama3:latest')
 
 def get_pdf_text(pdf_docs):
     text = ""
@@ -68,7 +71,6 @@ def get_vectorstore():
 
 def initialize_empty_conversation():
     # Initialize a basic LLM and retriever with empty or placeholder components
-    llm = HuggingFaceHub(repo_id="google/flan-t5-small", model_kwargs={"temperature": 0.5, "max_length": 512})
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     
     # Create an empty vectorstore (FAISS) or a mock retriever
@@ -76,7 +78,7 @@ def initialize_empty_conversation():
     vectorstore = get_vectorstore()
     
     conversation_chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
+        llm=LLM,
         retriever=vectorstore.as_retriever(),
         memory=memory
     )
@@ -84,12 +86,11 @@ def initialize_empty_conversation():
 
 
 def get_conversation_chain(vectorstore):
-    llm = HuggingFaceHub(repo_id="google/flan-t5-small", model_kwargs={"temperature":0.5, "max_length":512}) #takes approx 12s for 71.MB file with smallest embedding
 
     memory = ConversationBufferMemory(memory_key="chat_history",
                                       return_messages=True)
     conversation_chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
+        llm=LLM,
         retriever=vectorstore.as_retriever(),
         memory=memory
     )
@@ -108,7 +109,6 @@ def handle_userinput(user_question):
 
 
 def main():
-    load_dotenv() # gives access to langchain access to api-keys in .env
 
     st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
     st.write(css, unsafe_allow_html=True)
