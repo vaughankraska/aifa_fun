@@ -5,6 +5,11 @@
 docker compose up --build -d
 ```
 
+if you get errors, make sure you're logged in to docker in the terminal by running
+```bash
+docker login
+```
+
 ## To play with and view the database:
 1. exec into the pgvector container
 ```bash
