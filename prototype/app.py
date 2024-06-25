@@ -1,57 +1,80 @@
-#pip install -r requirements.txt
+# pip install -r requirements.txt
 
-#python --version
-#Python 3.8.18
+# python --version
+# Python 3.8.18
 
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import HuggingFaceInstructEmbeddings
-from langchain.vectorstores import FAISS #faiss runs locally --> use cloud for persistent storage
+from langchain_community.embeddings import OllamaEmbeddings
+from langchain_postgres import PGVector
+from langchain_postgres.vectorstores import PGVector
 from langchain.llms import HuggingFaceHub
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 import time 
 
-#re-make this to store as array of dicts, to know sources where the text was from
+# re-make this to store as array of dicts,
+# to know sources where the text was from
+# MODELS_DB_PAIRS = [
+#     ('all-minilm:latest', '45 MB', 'minilm'),
+#     ('gte-base:latest', '117 MB', 'gte'),
+#     ('nomic-embed-text:latest', '274 MB', 'nomic'),
+#     ('qwen2:0.5b', '352 MB', 'qwen'),
+#     ('tinyllama:latest', '637 MB', 'tinyllama'),
+#     ('mxbai-embed-large:latest', '669 MB', 'mxbai'),
+#     ('gemma:2b-instruct-v1.1-q2_K', '1.2 GB', 'gemma'),
+#     ('phi3:mini-128k', '2.2 GB', 'phimini'),
+#     ('llama3:latest', '4.7 GB', 'llama'),
+# ]
+DB_NAME = 'minilm'
+EMBEDDING_MODEL_NAME = 'all-minilm:latest'
+CONNECTION = f"postgresql+psycopg://postgres:password@localhost:5432/{DB_NAME}"
+
+
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
         pdf_reader = PdfReader(pdf)
         for page in pdf_reader.pages:
-            text+=page.extract_text()
+            text += page.extract_text()
     return text
+
 
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
         separator="\n",
-        chunk_size= 1000,
-        chunk_overlap = 200,
+        chunk_size=1000,
+        chunk_overlap=200,
         length_function=len
     )
     chunks = text_splitter.split_text(text)
     return chunks
 
 
-def get_vectorstore(text_chunks):
-    embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-base") #takes approx 12s for 71.MB file
-    #embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-large") #takes approx 40s for 71.MB file
-    #embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl") #takes approx 163s for 71.MB file
-    vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
+def get_vectorstore():
+    # takes approx 12s for 71.MB file
+    embedding = OllamaEmbeddings(model=EMBEDDING_MODEL_NAME)
+    vectorstore = PGVector(
+            embeddings=embedding,
+            collection_name='mind',
+            connection=CONNECTION,
+            use_jsonb=True,
+            )
     return vectorstore
 
-def get_conversation_chain(vectorstore):
-    llm = HuggingFaceHub(repo_id="google/flan-t5-small", model_kwargs={"temperature":0.5, "max_length":512}) #takes approx 12s for 71.MB file with smallest embedding
-    #llm = HuggingFaceHub(repo_id="google/flan-t5-large", model_kwargs={"temperature":0.5, "max_length":512}) #155s to have largest instructor + this
 
-    #from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-    #tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-xxl")
-    #llm = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-xxl")
-    #llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature":0.5, "max_length":512}) #xxs to have largest instructor + this
-
+def initialize_empty_conversation():
+    # Initialize a basic LLM and retriever with empty or placeholder components
+    llm = HuggingFaceHub(repo_id="google/flan-t5-small", model_kwargs={"temperature": 0.5, "max_length": 512})
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    
+    # Create an empty vectorstore (FAISS) or a mock retriever
+    # For demonstration, we're assuming an empty FAISS vectorstore can be created
+    vectorstore = get_vectorstore()
+    
     conversation_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
         retriever=vectorstore.as_retriever(),
@@ -59,36 +82,45 @@ def get_conversation_chain(vectorstore):
     )
     return conversation_chain
 
+
+def get_conversation_chain(vectorstore):
+    llm = HuggingFaceHub(repo_id="google/flan-t5-small", model_kwargs={"temperature":0.5, "max_length":512}) #takes approx 12s for 71.MB file with smallest embedding
+
+    memory = ConversationBufferMemory(memory_key="chat_history",
+                                      return_messages=True)
+    conversation_chain = ConversationalRetrievalChain.from_llm(
+        llm=llm,
+        retriever=vectorstore.as_retriever(),
+        memory=memory
+    )
+    return conversation_chain
+
+
 def handle_userinput(user_question):
-    if st.session_state.conversation:
-        our_response = st.session_state.conversation({'question': user_question})
-        st.session_state.chat_history = our_response['chat_history']
+    our_response = st.session_state.conversation({'question': user_question})
+    st.session_state.chat_history = our_response['chat_history']
 
-        #st.write(st.session_state.chat_history)
+    for i, message in enumerate(st.session_state.chat_history):
+        if i % 2 == 0:
+            st.write(user_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+        else:
+            st.write(bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
 
-        for i, message in enumerate(st.session_state.chat_history):
-            #st.write(message)
-            if i % 2 == 0:
-                st.write(user_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
-            else:
-                st.write(bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
-    else:
-        st.write("Please process the PDFs first to initialize the conversation.")
 
 def main():
-    load_dotenv() #gives access to langchain access to api-keys in .env
+    load_dotenv() # gives access to langchain access to api-keys in .env
 
     st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
     st.write(css, unsafe_allow_html=True)
 
     if "conversation" not in st.session_state:
-        st.session_state.conversation = None
+        st.session_state.conversation = initialize_empty_conversation()
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
 
     st.header("Chat with multiple PDFs :books:")
     user_question = st.text_input("Ask a question about your documents:")
-    
+
     if user_question:
         handle_userinput(user_question)
 
