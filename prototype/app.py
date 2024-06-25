@@ -37,15 +37,6 @@ CONNECTION = f"postgresql+psycopg://postgres:password@localhost:5432/{DB_NAME}"
 # LLM = HuggingFaceHub(repo_id="google/flan-t5-small", model_kwargs={"temperature": 0.5, "max_length": 512})
 LLM = Ollama(model='llama3:latest')
 
-def get_pdf_text(pdf_docs):
-    text = ""
-    for pdf in pdf_docs:
-        pdf_reader = PdfReader(pdf)
-        for page in pdf_reader.pages:
-            text += page.extract_text()
-    return text
-
-
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
         separator="\n",
@@ -98,7 +89,8 @@ def get_conversation_chain(vectorstore):
 
 
 def handle_userinput(user_question):
-    our_response = st.session_state.conversation({'question': user_question})
+    prompt = f"Reference the given documents that ansswer the following question: {user_question}"
+    our_response = st.session_state.conversation({'question': prompt})
     st.session_state.chat_history = our_response['chat_history']
 
     for i, message in enumerate(st.session_state.chat_history):
@@ -133,9 +125,7 @@ def main():
                 with st.spinner("Processing... Refresh page to stop"):
                     start_time = time.time()  # Start time tracker
                     try:
-                        raw_text = get_pdf_text(pdf_docs)
-                        text_chunks = get_text_chunks(raw_text)
-                        vectorstore = get_vectorstore(text_chunks)
+                        vectorstore = get_vectorstore()
                         st.session_state.conversation = get_conversation_chain(vectorstore)
 
                         current_time = time.time() - start_time
