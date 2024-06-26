@@ -89,7 +89,7 @@ def get_conversation_chain(vectorstore):
 
 
 def handle_userinput(user_question):
-    prompt = f"Reference the given documents that ansswer the following question: {user_question}"
+    prompt = f"Reference the given documents that answer the following question: {user_question}"
     our_response = st.session_state.conversation({'question': prompt})
     st.session_state.chat_history = our_response['chat_history']
 
