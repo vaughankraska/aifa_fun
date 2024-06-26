@@ -27,6 +27,11 @@ psql -U postgres
 >>> \l
 ```
 
+#### Create Database
+```bash
+>>> CREATE DATABASE <database name>;
+```
+
 #### switch to specific db
 ```bash
 >>> \c <DATABASE_NAME>
@@ -35,6 +40,10 @@ psql -U postgres
 #### list tables
 ```bash
 >>> \dt
+```
+#### list info on specific table
+```bash
+>>> \dt <table name>
 ```
 
 #### describe tables
