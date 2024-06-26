@@ -35,7 +35,7 @@ DB_NAME = 'minilm'
 EMBEDDING_MODEL_NAME = 'all-minilm:latest'
 CONNECTION = f"postgresql+psycopg://postgres:password@localhost:5432/{DB_NAME}"
 # LLM = HuggingFaceHub(repo_id="google/flan-t5-small", model_kwargs={"temperature": 0.5, "max_length": 512})
-LLM = Ollama(model='llama3:latest')
+LLM = Ollama(model='llama3:latest', base_url='http://localhost:31415')
 
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
@@ -50,7 +50,7 @@ def get_text_chunks(text):
 
 def get_vectorstore():
     # takes approx 12s for 71.MB file
-    embedding = OllamaEmbeddings(model=EMBEDDING_MODEL_NAME)
+    embedding = OllamaEmbeddings(model=EMBEDDING_MODEL_NAME, base_url='http://localhost:31415')
     vectorstore = PGVector(
             embeddings=embedding,
             collection_name='mind',
