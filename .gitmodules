@@ -1,0 +1,3 @@
+[submodule "cohere-finn"]
+	path = cohere-finn
+	url = https://github.com/vaughankraska/cohere-finn.git
